@@ -3,12 +3,13 @@ import json
 import requests
 import tkinter as tk
 from PIL import ImageTk, Image
+from decimal import Decimal
 
-def mjenjacnica(iznos_BC):
-    response = requests.get(TICKER_API_URL+iznos_BC)
+def mjenjacnica():
+    TICKER_API_URL = 'https://api.coinmarketcap.com/v1/ticker/'
+    response = requests.get(TICKER_API_URL+'bitcoin')
     response_json = response.json()
-    return float(response_json[0]['price_usd'])
-    #return (response_json)
+    return Decimal(response_json[0]['price_usd'])
 
 def on_spinbox_change():
     print("value:", spin.get())
@@ -73,7 +74,7 @@ def popuni_vrijednosti(broj_blokova):
 
     broj_transakcija.set(broj_transakcija_ukupno)
 
-    print(mjenjacnica('bitcoin'))
+
 def ukupno_BTC_fee_mempool():
     mempool = client.getrawmempool(True)
     ukupno_comm = 0
@@ -91,7 +92,6 @@ def ukupno_BTC_fee_mempool():
     avg_fee = ukupno_comm/i
     return(round(ukupno_comm,10), round(min_fee,10), round(max_fee,10), round(avg_fee,10))
 client = AuthServiceProxy("http://%s:%s@blockchain.oss.unist.hr:8332"%('student', 'WYVyF5DTERJASAiIiYGg4UkRH'))
-TICKER_API_URL = 'https://api.coinmarketcap.com/v1/ticker/'
 ukupno_comm_f, min_fee_f, max_fee_f, avg_fee_f = ukupno_BTC_fee_mempool()
 root = tk.Tk()
 
@@ -178,23 +178,52 @@ min_fee.set(min_fee_f)
 max_fee.set(max_fee_f)
 avg_fee.set(avg_fee_f)
 
-print(ukupno_FEE.get(), min_fee.get(), max_fee.get(), avg_fee.get())
+ukupno_FEE_USD = tk.DoubleVar()
+min_fee_USD  = tk.DoubleVar()
+max_fee_USD  = tk.DoubleVar()
+avg_fee_USD = tk.DoubleVar()
 
-tk.Label(root, text="\u03A3 Fee:", relief="ridge", width="20", anchor=tk.W).grid(row = 9, column=0, padx=30, pady=10, sticky=tk.W)
+BTC_u_Dolar = mjenjacnica()
+print(BTC_u_Dolar)
+
+ukupno_FEE_USD.set(round((BTC_u_Dolar * Decimal(ukupno_comm_f)),4))
+min_fee_USD.set(round((BTC_u_Dolar * Decimal(min_fee_f)),4))
+max_fee_USD.set(round((BTC_u_Dolar * Decimal(max_fee_f)),4))
+avg_fee_USD.set(round((BTC_u_Dolar * Decimal(avg_fee_f)),4))
+
+print(ukupno_FEE_USD.get(), min_fee_USD.get(), max_fee_USD.get(), avg_fee_USD.get())
+#Ukupno fee
+tk.Label(root, text="\u03A3 Fee (BTC):", relief="ridge", width="20", anchor=tk.W).grid(row = 9, column=0, padx=30, pady=10, sticky=tk.W)
 ukupno_fee_labela = tk.Label(root, relief="ridge", width="10", anchor=tk.E, textvariable=ukupno_FEE)
 ukupno_fee_labela.grid(row = 9, column=0, padx=30, pady=10, sticky=tk.E)
-
-tk.Label(root, text="Min Fee:", relief="ridge", width="20", anchor=tk.W).grid(row = 10, column=0, padx=30, pady=10, sticky=tk.W)
+#ukupno fee u dolarima
+tk.Label(root, text="\u03A3 Fee (USD):", relief="ridge", width="30", anchor=tk.W).grid(row = 9, column=1, padx=30, pady=10, sticky=tk.W)
+ukupno_fee_labela = tk.Label(root, relief="ridge", width="15", anchor=tk.W, textvariable=ukupno_FEE_USD)
+ukupno_fee_labela.grid(row = 9, column=1, padx=30, pady=10, sticky=tk.E)
+#minimalna fee
+tk.Label(root, text="Min Fee (BTC):", relief="ridge", width="20", anchor=tk.W).grid(row = 10, column=0, padx=30, pady=10, sticky=tk.W)
 min_fee_labela = tk.Label(root, relief="ridge", width="10", anchor=tk.E, textvariable=min_fee)
 min_fee_labela.grid(row = 10, column=0, padx=30, pady=10, sticky=tk.E)
-
-tk.Label(root, text="Max Fee:", relief="ridge", width="20", anchor=tk.W).grid(row = 11, column=0, padx=30, pady=10, sticky=tk.W)
+#min fee u USD
+tk.Label(root, text="Min Fee (USD):", relief="ridge", width="30", anchor=tk.W).grid(row = 10, column=1, padx=30, pady=10, sticky=tk.W)
+ukupno_fee_labela = tk.Label(root, relief="ridge", width="15", anchor=tk.W, textvariable=min_fee_USD)
+ukupno_fee_labela.grid(row = 10, column=1, padx=30, pady=10, sticky=tk.E)
+#max fee u BTC
+tk.Label(root, text="Max Fee (BTC):", relief="ridge", width="20", anchor=tk.W).grid(row = 11, column=0, padx=30, pady=10, sticky=tk.W)
 max_fee_labela = tk.Label(root, relief="ridge", width="10", anchor=tk.E, textvariable=max_fee)
 max_fee_labela.grid(row = 11, column=0, padx=30, pady=10, sticky=tk.E)
-
-tk.Label(root, text="Avg Fee:", relief="ridge", width="20", anchor=tk.W).grid(row = 12, column=0, padx=30, pady=10, sticky=tk.W)
+#max fee u USD
+tk.Label(root, text="Max Fee (USD):", relief="ridge", width="30", anchor=tk.W).grid(row = 11, column=1, padx=30, pady=10, sticky=tk.W)
+ukupno_fee_labela = tk.Label(root, relief="ridge", width="15", anchor=tk.W, textvariable=max_fee_USD)
+ukupno_fee_labela.grid(row = 11, column=1, padx=30, pady=10, sticky=tk.E)
+#AVG fee u BTC
+tk.Label(root, text="Avg Fee (BTC):", relief="ridge", width="20", anchor=tk.W).grid(row = 12, column=0, padx=30, pady=10, sticky=tk.W)
 avg_fee_labela = tk.Label(root, relief="ridge", width="10", anchor=tk.E, textvariable=avg_fee)
 avg_fee_labela.grid(row = 12, column=0, padx=30, pady=10, sticky=tk.E)
 
+#avg fee u USD
+tk.Label(root, text="Avg Fee (USD):", relief="ridge", width="30", anchor=tk.W).grid(row = 12, column=1, padx=30, pady=10, sticky=tk.W)
+ukupno_fee_labela = tk.Label(root, relief="ridge", width="15", anchor=tk.W, textvariable=avg_fee_USD)
+ukupno_fee_labela.grid(row = 12, column=1, padx=30, pady=10, sticky=tk.E)
 
 root.mainloop()
